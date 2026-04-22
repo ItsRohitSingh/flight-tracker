@@ -1,37 +1,131 @@
 .search-form {
+  position: relative;
   width: 100%;
+}
+
+.search-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-color-secondary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color);
+}
+
+.tab-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
 }
 
 .search-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 1rem;
-  color: var(--text-color-muted);
-}
-
-.search-input {
-  padding-left: 3rem;
-  padding-right: 7rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 50px;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-  height: 4rem;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.route-inputs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.input-group:not(:last-of-type)::after {
+  content: '';
+  position: absolute;
+  right: -0.5rem;
+  top: 10%;
+  height: 80%;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.search-icon, .input-icon {
+  position: absolute;
+  left: 1.5rem;
+  color: var(--text-color-secondary);
   font-size: 1.2rem;
 }
 
-.search-btn {
-  position: absolute;
-  right: 0.35rem;
-  border-radius: 50px;
-  height: 3.3rem;
-  padding: 0 2rem;
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  font-size: 1.2rem;
+  padding: 1rem 1rem 1rem 3.5rem;
+  outline: none;
+}
+
+.route-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-color);
   font-size: 1.1rem;
+  padding: 0.75rem 0.75rem 0.75rem 3rem;
+  outline: none;
+  width: 100%;
+}
+
+/* Fix for date picker in dark mode */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.search-input-wrapper:focus-within, .route-inputs-wrapper:focus-within {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(67, 97, 238, 0.2);
+}
+
+.search-btn {
+  border-radius: 40px;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  white-space: nowrap;
 }
 
 .search-btn:disabled {
@@ -85,6 +179,30 @@
 .suggestion-label {
   font-size: 1rem;
   font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .route-inputs-wrapper {
+    flex-direction: column;
+    border-radius: 16px;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .input-group:not(:last-of-type)::after {
+    display: none;
+  }
+  
+  .input-group {
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .search-btn {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 1rem;
+  }
 }
 
 .suggestion-type {

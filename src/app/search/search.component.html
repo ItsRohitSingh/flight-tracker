@@ -1,21 +1,72 @@
-<form class="search-form" (ngSubmit)="onSearch()">
-  <div class="search-input-wrapper">
-    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-    <input 
-      type="text" 
-      class="form-control search-input" 
-      placeholder="Enter flight (e.g. AA123) or airport (e.g. JFK)" 
-      [(ngModel)]="searchQuery" 
-      name="searchQuery"
-      autocomplete="off"
-      (input)="onInput()"
-      (focus)="onFocus()"
-      (blur)="hideSuggestions()"
-    >
-    <button type="submit" class="btn btn-primary search-btn" [disabled]="!searchQuery.trim()">
-      Track
+<div class="search-container">
+  <div class="search-tabs">
+    <button class="tab-btn" [class.active]="searchType === 'track'" (click)="setSearchType('track')">
+      <i class="fa-solid fa-plane"></i> Track Flight / Airport
     </button>
+    <button class="tab-btn" [class.active]="searchType === 'route'" (click)="setSearchType('route')">
+      <i class="fa-solid fa-route"></i> Search Route
+    </button>
+  </div>
+
+  <form class="search-form" (ngSubmit)="onSubmit()">
     
+    <!-- Track Flight/Airport Inputs -->
+    <div class="search-input-wrapper" *ngIf="searchType === 'track'">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input 
+        type="text" 
+        class="form-control search-input" 
+        placeholder="Enter flight (e.g. AA123) or airport (e.g. JFK)" 
+        [(ngModel)]="searchQuery" 
+        name="searchQuery"
+        autocomplete="off"
+        (input)="onInput('search')"
+        (focus)="onFocus('search')"
+        (blur)="hideSuggestions()"
+      >
+      <button type="submit" class="btn btn-primary search-btn" [disabled]="!searchQuery.trim()">
+        Track
+      </button>
+    </div>
+
+    <!-- Route Search Inputs -->
+    <div class="route-inputs-wrapper" *ngIf="searchType === 'route'">
+      <div class="input-group">
+        <i class="fa-solid fa-plane-departure input-icon"></i>
+        <input 
+          type="text" 
+          class="form-control route-input" 
+          placeholder="Origin (e.g. JFK)" 
+          [(ngModel)]="originQuery" 
+          name="originQuery"
+          autocomplete="off"
+          (input)="onInput('origin')"
+          (focus)="onFocus('origin')"
+          (blur)="hideSuggestions()"
+        >
+      </div>
+
+      <div class="input-group">
+        <i class="fa-solid fa-plane-arrival input-icon"></i>
+        <input 
+          type="text" 
+          class="form-control route-input" 
+          placeholder="Destination (e.g. LHR)" 
+          [(ngModel)]="destinationQuery" 
+          name="destinationQuery"
+          autocomplete="off"
+          (input)="onInput('destination')"
+          (focus)="onFocus('destination')"
+          (blur)="hideSuggestions()"
+        >
+      </div>
+
+      <button type="submit" class="btn btn-primary search-btn" [disabled]="!originQuery.trim() || !destinationQuery.trim()">
+        Search
+      </button>
+    </div>
+    
+    <!-- Shared Suggestions Dropdown -->
     <div class="suggestions-dropdown glass-panel" *ngIf="showSuggestions">
       <div class="suggestion-item" *ngFor="let suggestion of suggestions" (click)="selectSuggestion(suggestion)">
         <div class="suggestion-icon">
@@ -27,5 +78,5 @@
         </div>
       </div>
     </div>
-  </div>
-</form>
+  </form>
+</div>
