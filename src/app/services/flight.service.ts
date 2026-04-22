@@ -1,24 +1,245 @@
 import { Injectable } from '@angular/core';
-import { MockDataService } from './mock-data.service';
-import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, map, catchError, forkJoin } from 'rxjs';
 import { FlightStatus, AirportSchedule } from '../models';
+import { environment } from '../../environments/environment';
+import { COMMON_SUGGESTIONS, IATA_TO_CITY_MAP } from '../data.constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FlightService {
+  // private apiUrl = '';
+  private apiUrl = 'https://api.aviationstack.com/v1/flights';
 
-  constructor(private mockDataService: MockDataService) { }
+  constructor(private http: HttpClient) { }
 
-  trackFlight(flightNumber: string): Observable<FlightStatus | null> {
-    return this.mockDataService.getFlightStatus(flightNumber);
+  trackFlight(flightNumber: string): Observable<FlightStatus[]> {
+    if (environment.aviationstackApiKey === 'YOUR_AVIATIONSTACK_API_KEY_HERE') {
+      console.warn('Aviationstack API key is not configured.');
+      return of([]);
+    }
+
+    return this.http.get<any>(`${this.apiUrl}?access_key=${environment.aviationstackApiKey}&flight_iata=${flightNumber}`).pipe(
+      map(response => {
+        if (!response.data || response.data.length === 0) return [];
+
+        // iataToCity map has been moved to mapFlightData
+
+        // Map Aviationstack response to our FlightStatus model array
+        const mappedFlights = this.mapFlightData(response.data);
+
+        // Group by flightDate or just return sorted by date (newest first). They usually come sorted.
+        return mappedFlights.sort((a, b) => new Date(b.flightDate).getTime() - new Date(a.flightDate).getTime());
+      }),
+      catchError(err => {
+        console.error('Error fetching flight', err);
+        return of([]);
+      })
+    );
+  }
+
+  searchRoute(originIata: string, destIata: string): Observable<FlightStatus[]> {
+    if (environment.aviationstackApiKey === 'YOUR_AVIATIONSTACK_API_KEY_HERE') {
+      console.warn('Aviationstack API key is not configured.');
+      return of([]);
+    }
+
+    let url = `${this.apiUrl}?access_key=${environment.aviationstackApiKey}&dep_iata=${originIata}&arr_iata=${destIata}`;
+
+    return this.http.get<any>(url).pipe(
+      map(response => {
+        if (!response.data || response.data.length === 0) return [];
+        const mappedFlights = this.mapFlightData(response.data);
+        return mappedFlights.sort((a, b) => new Date(b.flightDate).getTime() - new Date(a.flightDate).getTime());
+      }),
+      catchError(err => {
+        console.error('Error fetching route', err);
+        return of([]);
+      })
+    );
   }
 
   getSchedule(airportCode: string, hours: number): Observable<AirportSchedule[]> {
-    return this.mockDataService.getAirportSchedule(airportCode, hours);
+    if (environment.aviationstackApiKey === 'YOUR_AVIATIONSTACK_API_KEY_HERE') {
+      console.warn('Aviationstack API key is not configured.');
+      return of([]);
+    }
+
+    const arrivals$ = this.http.get<any>(`${this.apiUrl}?access_key=${environment.aviationstackApiKey}&arr_iata=${airportCode}&limit=100`);
+    const departures$ = this.http.get<any>(`${this.apiUrl}?access_key=${environment.aviationstackApiKey}&dep_iata=${airportCode}&limit=100`);
+
+    return forkJoin([arrivals$, departures$]).pipe(
+      map(([arrData, depData]) => {
+        const schedules: AirportSchedule[] = [];
+
+        const getTzOffsetMs = (timeZone: string, date: Date) => {
+          try {
+            const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+            return tzDate.getTime() - utcDate.getTime();
+          } catch (e) {
+            return 0;
+          }
+        };
+
+        const processFlight = (f: any, type: 'Arrival' | 'Departure') => {
+          const airportTz = type === 'Arrival' ? (f.arrival.timezone || 'UTC') : (f.departure.timezone || 'UTC');
+          const localScheduledStr = type === 'Arrival' ? f.arrival.scheduled : f.departure.scheduled;
+          const fakeUtcDate = new Date(localScheduledStr);
+          const absoluteUtcDate = new Date(fakeUtcDate.getTime() - getTzOffsetMs(airportTz, fakeUtcDate));
+
+          schedules.push({
+            airportCode: airportCode.toUpperCase(),
+            type,
+            flightNumber: f.flight.iata,
+            airline: f.airline.name,
+            time: fakeUtcDate,
+            absoluteUtcTime: absoluteUtcDate,
+            status: this.mapStatus(f.flight_status),
+            otherAirportCode: type === 'Arrival' ? f.departure.iata : f.arrival.iata
+          });
+        };
+
+        // Process Arrivals
+        if (arrData.data) {
+          arrData.data.forEach((f: any) => processFlight(f, 'Arrival'));
+        }
+
+        // Process Departures
+        if (depData.data) {
+          depData.data.forEach((f: any) => processFlight(f, 'Departure'));
+        }
+
+        // Sort by time
+        return schedules.sort((a, b) => a.time.getTime() - b.time.getTime());
+      }),
+      catchError(err => {
+        console.error('Error fetching schedule', err);
+        return of([]);
+      })
+    );
   }
 
-  getSuggestions(query: string) {
-    return this.mockDataService.getSuggestions(query);
+  getSuggestions(query: string): Observable<{ type: 'Airport' | 'Flight', label: string, code: string }[]> {
+    if (!query) return of([]);
+    const q = query.toLowerCase();
+
+    // Static local dictionary to prevent burning API limits on every keystroke
+    const allItems = COMMON_SUGGESTIONS;
+
+    const results = allItems.filter(item =>
+      item.label.toLowerCase().includes(q) || item.code.toLowerCase().includes(q)
+    );
+
+    return of(results);
+  }
+
+  private mapFlightData(data: any[]): FlightStatus[] {
+    const iataToCity = IATA_TO_CITY_MAP;
+
+    return data.map((flight: any) => {
+      const originTz = flight.departure.timezone || 'UTC';
+      const destTz = flight.arrival.timezone || 'UTC';
+
+      let destCity = iataToCity[flight.arrival.iata];
+      if (!destCity) {
+        // Fallback: clean up airport name to improve weather lookup chances
+        destCity = flight.arrival.airport
+          .replace(/ International.*$/i, '')
+          .replace(/ Airport.*$/i, '')
+          .replace(/\(.*?\)/g, '')
+          .trim();
+      }
+
+      const scheduledDep = new Date(flight.departure.scheduled);
+      const scheduledArr = new Date(flight.arrival.scheduled);
+
+      // Helper to get offset at a specific date
+      const getTzOffsetMs = (timeZone: string, date: Date) => {
+        try {
+          const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+          const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+          return tzDate.getTime() - utcDate.getTime();
+        } catch (e) {
+          return 0;
+        }
+      };
+
+      // Calculate absolute UTC times
+      const absDep = new Date(scheduledDep.getTime() - getTzOffsetMs(originTz, scheduledDep));
+      const absArr = new Date(scheduledArr.getTime() - getTzOffsetMs(destTz, scheduledArr));
+
+      // Duration in hours
+      let totalDurationHours = (absArr.getTime() - absDep.getTime()) / 3600000;
+      if (totalDurationHours <= 0) totalDurationHours = 5; // fallback
+
+      const totalDistanceKm = Math.round(totalDurationHours * 850); // rough estimate 850 km/h
+
+      let timeTravelledHours = 0;
+      let timeRemainingHours = totalDurationHours;
+      let distanceTravelledKm = 0;
+      let remainingDistanceKm = totalDistanceKm;
+
+      if (flight.flight_status === 'landed') {
+        timeTravelledHours = totalDurationHours;
+        timeRemainingHours = 0;
+        distanceTravelledKm = totalDistanceKm;
+        remainingDistanceKm = 0;
+      } else if (flight.flight_status === 'active') {
+         const now = new Date();
+         const travelledMs = now.getTime() - absDep.getTime();
+         timeTravelledHours = Math.max(0, travelledMs / 3600000);
+         if (timeTravelledHours > totalDurationHours) timeTravelledHours = totalDurationHours;
+         timeRemainingHours = totalDurationHours - timeTravelledHours;
+         distanceTravelledKm = Math.round((timeTravelledHours / totalDurationHours) * totalDistanceKm);
+         remainingDistanceKm = totalDistanceKm - distanceTravelledKm;
+      }
+
+      return {
+        flightNumber: flight.flight.iata,
+        airline: flight.airline.name,
+        aircraft: flight.aircraft ? flight.aircraft.registration : 'Unknown Aircraft',
+        status: this.mapStatus(flight.flight_status),
+        flightDate: flight.flight_date,
+        origin: {
+          code: flight.departure.iata,
+          city: flight.departure.airport,
+          name: flight.departure.airport
+        },
+        destination: {
+          code: flight.arrival.iata,
+          city: destCity,
+          name: flight.arrival.airport
+        },
+        stops: [], // Free tier doesn't easily provide stopover data
+
+        originTimezone: originTz,
+        destinationTimezone: destTz,
+        scheduledDepartureTime: scheduledDep,
+        actualDepartureTime: flight.departure.actual ? new Date(flight.departure.actual) : null,
+        scheduledArrivalTime: scheduledArr,
+        estimatedArrivalTime: flight.arrival.estimated ? new Date(flight.arrival.estimated) : null,
+
+        totalDurationHours,
+        timeTravelledHours,
+        timeRemainingHours,
+        totalDistanceKm,
+        distanceTravelledKm,
+        remainingDistanceKm
+      };
+    });
+  }
+
+  private mapStatus(apiStatus: string): any {
+    switch (apiStatus) {
+      case 'active': return 'In Air';
+      case 'scheduled': return 'Scheduled';
+      case 'landed': return 'Landed';
+      case 'cancelled': return 'Cancelled';
+      case 'incident': return 'Delayed';
+      case 'diverted': return 'Delayed';
+      default: return 'Scheduled';
+    }
   }
 }

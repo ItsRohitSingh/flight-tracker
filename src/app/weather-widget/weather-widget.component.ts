@@ -12,6 +12,7 @@ import { WeatherInfo } from '../models';
 })
 export class WeatherWidgetComponent implements OnInit, OnChanges {
   @Input() locationCode!: string;
+  @Input() cityName?: string;
   @Input() title: string = 'Destination Weather';
   
   weatherInfo: WeatherInfo | null = null;
@@ -33,7 +34,7 @@ export class WeatherWidgetComponent implements OnInit, OnChanges {
     if (!this.locationCode) return;
     
     this.loading = true;
-    this.weatherService.getWeatherForLocation(this.locationCode).subscribe(data => {
+    this.weatherService.getWeatherForLocation(this.locationCode, this.cityName).subscribe(data => {
       this.weatherInfo = data;
       this.loading = false;
     });

@@ -1,0 +1,52 @@
+<div class="route-search-container animate-fade-in">
+  <div class="header glass-panel">
+    <h1><i class="fa-solid fa-route"></i> Route Search</h1>
+    <p>Searching flights from <strong>{{ origin }}</strong> to <strong>{{ destination }}</strong></p>
+  </div>
+
+  <div *ngIf="loading" class="loading-state">
+    <i class="fa-solid fa-plane fa-spin"></i> Finding flights...
+  </div>
+
+  <div *ngIf="!loading && flights.length === 0" class="error-state glass-panel">
+    <h2>No Flights Found</h2>
+    <p>We couldn't find any flights for this route. Try adjusting your search criteria.</p>
+  </div>
+
+  <div class="results-grid" *ngIf="!loading && flights.length > 0">
+    <div class="flight-card glass-panel" *ngFor="let flight of flights" (click)="goToFlight(flight.flightNumber)">
+      <div class="card-header">
+        <div class="airline-info">
+          <h3>{{ flight.airline }}</h3>
+          <span class="flight-number">{{ flight.flightNumber }}</span>
+        </div>
+        <span [class]="getStatusBadgeClass(flight)">{{ flight.status }}</span>
+      </div>
+      
+      <div class="card-body">
+        <div class="route-info">
+          <div class="point">
+            <span class="time">{{ formatLocalTime(flight.scheduledDepartureTime, flight.originTimezone) }}</span>
+            <span class="code">{{ flight.origin.code }}</span>
+          </div>
+          
+          <div class="path">
+            <div class="duration">{{ flight.totalDurationHours | number:'1.1-1' }}h</div>
+            <div class="line"></div>
+            <i class="fa-solid fa-plane"></i>
+          </div>
+          
+          <div class="point">
+            <span class="time">{{ formatLocalTime(flight.scheduledArrivalTime, flight.destinationTimezone) }}</span>
+            <span class="code">{{ flight.destination.code }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-footer">
+        <span class="date"><i class="fa-regular fa-calendar"></i> {{ flight.flightDate | date:'mediumDate' }}</span>
+        <button class="btn btn-sm btn-primary">Track Flight <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+</div>

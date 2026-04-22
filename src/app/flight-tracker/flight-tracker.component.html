@@ -3,94 +3,115 @@
     <i class="fa-solid fa-plane fa-spin"></i> Fetching flight details...
   </div>
 
-  <div *ngIf="!loading && !flightData" class="error-state glass-panel">
+  <div *ngIf="!loading && flightDataList.length === 0" class="error-state glass-panel">
     <h2>Flight Not Found</h2>
     <p>We couldn't find details for flight {{ flightNumber }}. Please check the number and try again.</p>
   </div>
 
-  <ng-container *ngIf="!loading && flightData">
-    <div class="flight-header glass-panel">
-      <div class="flight-title">
-        <h2>{{ flightData.airline }} {{ flightData.flightNumber }}</h2>
-        <span [class]="getStatusBadgeClass()">{{ flightData.status }}</span>
+  <ng-container *ngIf="!loading && flightDataList.length > 0">
+    
+    <div class="flight-history-item" *ngFor="let flight of flightDataList; let i = index">
+      
+      <!-- Collapsible Header -->
+      <div class="flight-header glass-panel collapsible-header" (click)="toggleExpand(i)">
+        <div class="header-left">
+          <div class="date-badge">
+            <i class="fa-regular fa-calendar"></i> {{ flight.flightDate | date:'mediumDate' }}
+          </div>
+          <div class="flight-title">
+            <h2>{{ flight.airline }} {{ flight.flightNumber }}</h2>
+            <span [class]="getStatusBadgeClass(flight)">{{ flight.status }}</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="aircraft-info" *ngIf="flight.aircraft && flight.aircraft !== 'Unknown Aircraft'">
+            <i class="fa-solid fa-plane"></i> {{ flight.aircraft }}
+          </div>
+          <i class="fa-solid fa-chevron-down expand-icon" [class.rotated]="expandedIndex === i"></i>
+        </div>
       </div>
-      <div class="aircraft-info">
-        <i class="fa-solid fa-plane"></i> {{ flightData.aircraft }}
-      </div>
-    </div>
 
-    <div class="flight-route glass-panel">
-      <div class="route-point origin">
-        <div class="code">{{ flightData.origin.code }}</div>
-        <div class="city">{{ flightData.origin.city }}</div>
-        <div class="time">
-          <strong>Sch:</strong> {{ flightData.scheduledDepartureTime | date:'shortTime' }}<br>
-          <span *ngIf="flightData.actualDepartureTime"><strong>Act:</strong> {{ flightData.actualDepartureTime | date:'shortTime' }}</span>
+      <!-- Collapsible Body -->
+      <div class="collapsible-body" *ngIf="expandedIndex === i">
+        <div class="flight-route glass-panel">
+          <div class="route-point origin">
+            <div class="code">{{ flight.origin.code }}</div>
+            <div class="city">{{ flight.origin.name }}</div>
+            <div class="time">
+              <strong>Sch:</strong> {{ formatLocalTime(flight.scheduledDepartureTime, flight.originTimezone) }}<br>
+              <span *ngIf="flight.actualDepartureTime"><strong>Act:</strong> {{ formatLocalTime(flight.actualDepartureTime, flight.originTimezone) }}</span>
+            </div>
+            <div class="timezone-label">{{ flight.originTimezone }}</div>
+          </div>
+          
+          <div class="route-progress">
+            <i class="fa-solid fa-plane route-icon" [style.left.%]="getProgressPercentage(flight)"></i>
+            <div class="progress-container">
+              <div class="progress-bar" [style.width.%]="getProgressPercentage(flight)"></div>
+            </div>
+            <div class="route-stats">
+              <span *ngIf="flight.stops.length > 0">
+                {{ flight.stops.length }} Stop(s) 
+                <span *ngFor="let stop of flight.stops; let last = last">{{ stop.code }}{{ !last ? ', ' : '' }}</span>
+              </span>
+              <span *ngIf="flight.stops.length === 0">Direct</span>
+            </div>
+          </div>
+
+          <div class="route-point destination">
+            <div class="code">{{ flight.destination.code }}</div>
+            <div class="city">{{ flight.destination.name }}</div>
+            <div class="time">
+              <strong>Sch:</strong> {{ formatLocalTime(flight.scheduledArrivalTime, flight.destinationTimezone) }}<br>
+              <span *ngIf="flight.estimatedArrivalTime"><strong>Est:</strong> {{ formatLocalTime(flight.estimatedArrivalTime, flight.destinationTimezone) }}</span>
+            </div>
+            <div class="timezone-label">{{ flight.destinationTimezone }}</div>
+          </div>
+        </div>
+
+        <div class="flight-details-grid">
+          <div class="detail-card glass-panel">
+            <div class="detail-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="detail-content">
+              <h4>Duration</h4>
+              <div class="stat-row">
+                <span>Total:</span> <strong>{{ flight.totalDurationHours | number:'1.1-1' }}h</strong>
+              </div>
+              <div class="stat-row">
+                <span>Travelled:</span> <strong>{{ flight.timeTravelledHours | number:'1.1-1' }}h</strong>
+              </div>
+              <div class="stat-row">
+                <span>Remaining:</span> <strong>{{ flight.timeRemainingHours | number:'1.1-1' }}h</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-card glass-panel">
+            <div class="detail-icon"><i class="fa-solid fa-route"></i></div>
+            <div class="detail-content">
+              <h4>Distance</h4>
+              <div class="stat-row">
+                <span>Total:</span> <strong>{{ flight.totalDistanceKm | number }} km</strong>
+              </div>
+              <div class="stat-row">
+                <span>Travelled:</span> <strong>{{ flight.distanceTravelledKm | number }} km</strong>
+              </div>
+              <div class="stat-row">
+                <span>Remaining:</span> <strong>{{ flight.remainingDistanceKm | number }} km</strong>
+              </div>
+            </div>
+          </div>
+
+          <app-weather-widget 
+            *ngIf="i === 0"
+            [locationCode]="flight.destination.code"
+            [cityName]="flight.destination.city"
+            title="Destination Weather"
+            class="weather-card">
+          </app-weather-widget>
         </div>
       </div>
       
-      <div class="route-progress">
-        <i class="fa-solid fa-plane route-icon" [style.left.%]="getProgressPercentage()"></i>
-        <div class="progress-container">
-          <div class="progress-bar" [style.width.%]="getProgressPercentage()"></div>
-        </div>
-        <div class="route-stats">
-          <span *ngIf="flightData.stops.length > 0">
-            {{ flightData.stops.length }} Stop(s) 
-            <span *ngFor="let stop of flightData.stops; let last = last">{{ stop.code }}{{ !last ? ', ' : '' }}</span>
-          </span>
-          <span *ngIf="flightData.stops.length === 0">Direct</span>
-        </div>
-      </div>
-
-      <div class="route-point destination">
-        <div class="code">{{ flightData.destination.code }}</div>
-        <div class="city">{{ flightData.destination.city }}</div>
-        <div class="time">
-          <strong>Sch:</strong> {{ flightData.scheduledArrivalTime | date:'shortTime' }}<br>
-          <span *ngIf="flightData.estimatedArrivalTime"><strong>Est:</strong> {{ flightData.estimatedArrivalTime | date:'shortTime' }}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="flight-details-grid">
-      <div class="detail-card glass-panel">
-        <div class="detail-icon"><i class="fa-solid fa-clock"></i></div>
-        <div class="detail-content">
-          <h4>Duration</h4>
-          <div class="stat-row">
-            <span>Total:</span> <strong>{{ flightData.totalDurationHours | number:'1.1-1' }}h</strong>
-          </div>
-          <div class="stat-row">
-            <span>Travelled:</span> <strong>{{ flightData.timeTravelledHours | number:'1.1-1' }}h</strong>
-          </div>
-          <div class="stat-row">
-            <span>Remaining:</span> <strong>{{ flightData.timeRemainingHours | number:'1.1-1' }}h</strong>
-          </div>
-        </div>
-      </div>
-
-      <div class="detail-card glass-panel">
-        <div class="detail-icon"><i class="fa-solid fa-route"></i></div>
-        <div class="detail-content">
-          <h4>Distance</h4>
-          <div class="stat-row">
-            <span>Total:</span> <strong>{{ flightData.totalDistanceKm | number }} km</strong>
-          </div>
-          <div class="stat-row">
-            <span>Travelled:</span> <strong>{{ flightData.distanceTravelledKm | number }} km</strong>
-          </div>
-          <div class="stat-row">
-            <span>Remaining:</span> <strong>{{ flightData.remainingDistanceKm | number }} km</strong>
-          </div>
-        </div>
-      </div>
-
-      <app-weather-widget 
-        [locationCode]="flightData.destination.code"
-        title="Destination Weather"
-        class="weather-card">
-      </app-weather-widget>
     </div>
   </ng-container>
 </div>

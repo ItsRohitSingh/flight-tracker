@@ -47,7 +47,15 @@ export class AirportScheduleComponent implements OnInit, OnDestroy {
   }
 
   get filteredSchedules() {
-    return this.schedules.filter(s => s.type === this.activeTab);
+    const now = new Date();
+    // Use absolute UTC times to accurately filter flights
+    const maxTime = new Date(now.getTime() + this.timeFilter * 3600000);
+    
+    return this.schedules.filter(s => 
+      s.type === this.activeTab && 
+      s.absoluteUtcTime >= now && 
+      s.absoluteUtcTime <= maxTime
+    );
   }
 
   setTab(tab: 'Arrival' | 'Departure') {
@@ -63,6 +71,34 @@ export class AirportScheduleComponent implements OnInit, OnDestroy {
     if (status === 'Delayed') return 'badge badge-warning';
     if (status === 'Cancelled') return 'badge badge-danger';
     return 'badge badge-secondary';
+  }
+
+  formatLocalTime(date: Date): string {
+    if (!date) return '';
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'UTC',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  formatLocalDate(date: Date): string {
+    if (!date) return '';
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'UTC',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(date);
+    } catch (e) {
+      return '';
+    }
   }
 
   ngOnDestroy() {
