@@ -3,6 +3,7 @@ export interface FlightStatus {
   airline: string;
   aircraft: string; // e.g., Boeing 777-300ER
   status: 'Scheduled' | 'In Air' | 'Landed' | 'Delayed' | 'Cancelled';
+  flightDate: string; // e.g., '2023-10-27'
   
   origin: {
     code: string;
@@ -20,6 +21,8 @@ export interface FlightStatus {
   }[];
 
   // Timing
+  originTimezone: string;
+  destinationTimezone: string;
   scheduledDepartureTime: Date;
   actualDepartureTime: Date | null;
   scheduledArrivalTime: Date;
@@ -41,6 +44,7 @@ export interface AirportSchedule {
   flightNumber: string;
   airline: string;
   time: Date;
+  absoluteUtcTime: Date;
   status: string;
   otherAirportCode: string;
 }

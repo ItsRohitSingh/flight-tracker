@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, of, catchError } from 'rxjs';
+import { Observable, map, of, catchError, shareReplay } from 'rxjs';
 import { WeatherInfo } from '../models';
 import { environment } from '../../environments/environment';
 
@@ -9,11 +9,12 @@ import { environment } from '../../environments/environment';
 })
 export class WeatherService {
   private apiUrl = 'https://api.openweathermap.org/data/2.5/weather';
+  private cache = new Map<string, Observable<WeatherInfo>>();
 
   constructor(private http: HttpClient) { }
 
-  getWeatherForLocation(locationCode: string): Observable<WeatherInfo> {
-    const city = this.getCityName(locationCode);
+  getWeatherForLocation(locationCode: string, providedCityName?: string): Observable<WeatherInfo> {
+    const city = providedCityName || this.getCityName(locationCode);
     
     // If no API key is provided, return empty or fallback
     if (environment.openWeatherMapApiKey === 'YOUR_OPENWEATHERMAP_API_KEY_HERE') {
@@ -21,7 +22,12 @@ export class WeatherService {
       return of(this.getFallbackWeather(locationCode, city));
     }
 
-    return this.http.get<any>(`${this.apiUrl}?q=${city}&appid=${environment.openWeatherMapApiKey}&units=metric`).pipe(
+    const cacheKey = city.toLowerCase();
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey)!;
+    }
+
+    const obs = this.http.get<any>(`${this.apiUrl}?q=${city}&appid=${environment.openWeatherMapApiKey}&units=metric`).pipe(
       map(data => ({
         locationCode: locationCode.toUpperCase(),
         city: data.name,
@@ -33,9 +39,14 @@ export class WeatherService {
       })),
       catchError(err => {
         console.error('Error fetching weather', err);
+        this.cache.delete(cacheKey); // clear cache on error so it can be retried
         return of(this.getFallbackWeather(locationCode, city));
-      })
+      }),
+      shareReplay(1)
     );
+
+    this.cache.set(cacheKey, obs);
+    return obs;
   }
 
   private mapWeatherIcon(iconCode: string): string {

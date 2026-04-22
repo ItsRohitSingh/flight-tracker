@@ -15,8 +15,10 @@ import { WeatherWidgetComponent } from '../weather-widget/weather-widget.compone
 })
 export class FlightTrackerComponent implements OnInit, OnDestroy {
   flightNumber: string = '';
-  flightData: FlightStatus | null = null;
+  flightDataList: FlightStatus[] = [];
   loading: boolean = true;
+  expandedIndex: number = 0; // First flight expanded by default
+
   private routeSub: Subscription | null = null;
 
   constructor(
@@ -37,28 +39,60 @@ export class FlightTrackerComponent implements OnInit, OnDestroy {
   loadFlightData() {
     this.loading = true;
     this.flightService.trackFlight(this.flightNumber).subscribe(data => {
-      this.flightData = data;
+      this.flightDataList = data || [];
+      this.expandedIndex = 0; // reset
       this.loading = false;
     });
   }
 
-  getProgressPercentage(): number {
-    if (!this.flightData) return 0;
-    if (this.flightData.status === 'Landed') return 100;
-    if (this.flightData.status === 'Scheduled' || this.flightData.status === 'Cancelled') return 0;
-    
-    return (this.flightData.distanceTravelledKm / this.flightData.totalDistanceKm) * 100;
+  toggleExpand(index: number) {
+    if (this.expandedIndex === index) {
+      this.expandedIndex = -1; // collapse
+    } else {
+      this.expandedIndex = index;
+    }
   }
 
-  getStatusBadgeClass(): string {
-    if (!this.flightData) return 'badge';
-    switch (this.flightData.status) {
+  getProgressPercentage(flight: FlightStatus): number {
+    if (!flight) return 0;
+    if (flight.status === 'Landed') return 100;
+    if (flight.status === 'Scheduled' || flight.status === 'Cancelled') return 0;
+    
+    return (flight.distanceTravelledKm / flight.totalDistanceKm) * 100;
+  }
+
+  getStatusBadgeClass(flight: FlightStatus): string {
+    if (!flight) return 'badge';
+    switch (flight.status) {
       case 'In Air': return 'badge badge-success';
       case 'Scheduled': return 'badge badge-secondary';
       case 'Landed': return 'badge badge-secondary';
       case 'Delayed': return 'badge badge-warning';
       case 'Cancelled': return 'badge badge-danger';
       default: return 'badge';
+    }
+  }
+
+  formatLocalTime(date: Date | null, timeZoneLabel: string): string {
+    if (!date) return '';
+    // Aviationstack returns local times tagged with UTC offset (e.g. +00:00).
+    // This means the Date object's UTC time IS the local time.
+    // By formatting with timeZone: 'UTC', we get the accurate local time regardless of user's timezone.
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'UTC',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
+    } catch (e) {
+      console.warn('Error formatting time:', e);
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'UTC',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).format(date);
     }
   }
 

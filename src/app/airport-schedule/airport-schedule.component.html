@@ -53,8 +53,8 @@
       </div>
       
       <div class="time-info">
-        <span class="time">{{ schedule.time | date:'shortTime' }}</span>
-        <span class="date">{{ schedule.time | date:'shortDate' }}</span>
+        <span class="time">{{ formatLocalTime(schedule.time) }}</span>
+        <span class="date">{{ formatLocalDate(schedule.time) }}</span>
       </div>
       
       <div class="status-info">
