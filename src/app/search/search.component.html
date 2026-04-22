@@ -1,0 +1,31 @@
+<form class="search-form" (ngSubmit)="onSearch()">
+  <div class="search-input-wrapper">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input 
+      type="text" 
+      class="form-control search-input" 
+      placeholder="Enter flight (e.g. AA123) or airport (e.g. JFK)" 
+      [(ngModel)]="searchQuery" 
+      name="searchQuery"
+      autocomplete="off"
+      (input)="onInput()"
+      (focus)="onFocus()"
+      (blur)="hideSuggestions()"
+    >
+    <button type="submit" class="btn btn-primary search-btn" [disabled]="!searchQuery.trim()">
+      Track
+    </button>
+    
+    <div class="suggestions-dropdown glass-panel" *ngIf="showSuggestions">
+      <div class="suggestion-item" *ngFor="let suggestion of suggestions" (click)="selectSuggestion(suggestion)">
+        <div class="suggestion-icon">
+          <i class="fa-solid" [ngClass]="{'fa-building': suggestion.type === 'Airport', 'fa-plane': suggestion.type === 'Flight'}"></i>
+        </div>
+        <div class="suggestion-content">
+          <div class="suggestion-label">{{ suggestion.label }}</div>
+          <div class="suggestion-type" [ngClass]="suggestion.type.toLowerCase()">{{ suggestion.type }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

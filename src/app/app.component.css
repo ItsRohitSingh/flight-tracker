@@ -1,0 +1,130 @@
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  transition: all var(--transition-speed);
+}
+
+.app-container.home-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem 2rem;
+  transition: all var(--transition-speed);
+}
+
+.app-header.transparent {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 1rem 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.logo i {
+  font-size: 2rem;
+  transition: transform var(--transition-speed);
+}
+
+.logo:hover i {
+  transform: scale(1.1);
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+  transition: color var(--transition-speed);
+}
+
+.logo:hover h1 {
+  color: var(--primary-color);
+}
+
+.app-header.transparent .logo i {
+  font-size: 2.5rem;
+}
+
+.app-header.transparent .logo h1 {
+  font-size: 2rem;
+}
+
+.header-search {
+  flex: 0 1 500px;
+}
+
+.app-main {
+  min-height: 60vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-search-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 10vh;
+}
+
+.home-title {
+  font-size: 4rem;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--text-color), var(--text-color-muted));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation-delay: 0.1s;
+}
+
+.home-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-color-muted);
+  margin-bottom: 3rem;
+  animation-delay: 0.2s;
+}
+
+.home-search-wrapper {
+  width: 100%;
+  max-width: 800px;
+  animation-delay: 0.3s;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+  
+  .app-header.transparent {
+    align-items: center;
+  }
+  
+  .header-search {
+    flex: 1 1 auto;
+  }
+
+  .home-title {
+    font-size: 2.5rem;
+  }
+}

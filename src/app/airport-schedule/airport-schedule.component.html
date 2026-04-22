@@ -1,0 +1,65 @@
+<div class="schedule-container animate-fade-in">
+  <div class="schedule-header glass-panel">
+    <div class="header-title">
+      <h2><i class="fa-solid fa-building"></i> {{ airportCode }} Schedule</h2>
+    </div>
+    
+    <div class="header-controls">
+      <div class="tabs">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'Arrival'" 
+          (click)="setTab('Arrival')">
+          <i class="fa-solid fa-plane-arrival"></i> Arrivals
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'Departure'" 
+          (click)="setTab('Departure')">
+          <i class="fa-solid fa-plane-departure"></i> Departures
+        </button>
+      </div>
+
+      <div class="filter-group">
+        <label for="timeFilter">Next:</label>
+        <select id="timeFilter" class="form-control select-filter" [(ngModel)]="timeFilter" (change)="onFilterChange()">
+          <option [ngValue]="4">4 Hours</option>
+          <option [ngValue]="6">6 Hours</option>
+          <option [ngValue]="8">8 Hours</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-state glass-panel">
+    <i class="fa-solid fa-spinner fa-spin"></i> Loading schedule...
+  </div>
+
+  <div *ngIf="!loading && filteredSchedules.length === 0" class="empty-state glass-panel">
+    <i class="fa-solid fa-calendar-xmark"></i>
+    <p>No {{ activeTab.toLowerCase() }}s found in the next {{ timeFilter }} hours.</p>
+  </div>
+
+  <div *ngIf="!loading && filteredSchedules.length > 0" class="schedule-list">
+    <div class="schedule-card glass-panel" *ngFor="let schedule of filteredSchedules">
+      <div class="flight-info">
+        <div class="airline-name">{{ schedule.airline }}</div>
+        <a [routerLink]="['/flight', schedule.flightNumber]" class="flight-number">{{ schedule.flightNumber }}</a>
+      </div>
+      
+      <div class="route-info">
+        <span class="label">{{ activeTab === 'Arrival' ? 'From' : 'To' }}:</span>
+        <span class="value">{{ schedule.otherAirportCode }}</span>
+      </div>
+      
+      <div class="time-info">
+        <span class="time">{{ schedule.time | date:'shortTime' }}</span>
+        <span class="date">{{ schedule.time | date:'shortDate' }}</span>
+      </div>
+      
+      <div class="status-info">
+        <span [class]="getStatusClass(schedule.status)">{{ schedule.status }}</span>
+      </div>
+    </div>
+  </div>
+</div>

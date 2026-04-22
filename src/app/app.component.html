@@ -1,0 +1,22 @@
+<div class="app-container" [class.home-layout]="isHome">
+  <header class="app-header glass-panel" [class.transparent]="isHome">
+    <a routerLink="/" class="logo">
+      <i class="fa-solid fa-plane-departure"></i>
+      <h1>AeroTrack</h1>
+    </a>
+    <div class="header-search" *ngIf="!isHome">
+      <app-search></app-search>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="home-search-container" *ngIf="isHome">
+      <h1 class="home-title animate-fade-in">Track your flight.<br>Find your schedule.</h1>
+      <p class="home-subtitle animate-fade-in">Real-time global aviation intelligence at your fingertips.</p>
+      <div class="home-search-wrapper animate-fade-in">
+        <app-search></app-search>
+      </div>
+    </div>
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,0 +1,75 @@
+.weather-widget {
+  padding: 1.5rem;
+}
+
+.weather-widget h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  color: var(--text-color-muted);
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.5rem;
+}
+
+.weather-loading {
+  text-align: center;
+  color: var(--text-color-muted);
+  padding: 2rem 0;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.weather-icon i {
+  font-size: 4rem;
+  color: var(--warning-color);
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.weather-temp {
+  display: flex;
+  flex-direction: column;
+}
+
+.weather-temp .temp {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.weather-temp .city {
+  color: var(--text-color-muted);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.weather-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+}
+
+.weather-detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: var(--text-color-muted);
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-weight: 500;
+  font-size: 0.95rem;
+}

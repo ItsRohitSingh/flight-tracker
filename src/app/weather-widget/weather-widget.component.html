@@ -1,0 +1,34 @@
+<div class="weather-widget glass-panel">
+  <h3>{{ title }}</h3>
+  
+  <div *ngIf="loading" class="weather-loading">
+    <i class="fa-solid fa-spinner fa-spin"></i> Loading weather...
+  </div>
+
+  <div *ngIf="!loading && weatherInfo" class="weather-content animate-fade-in">
+    <div class="weather-main">
+      <div class="weather-icon">
+        <i class="fa-solid {{ weatherInfo.icon }}"></i>
+      </div>
+      <div class="weather-temp">
+        <span class="temp">{{ weatherInfo.temperatureC }}°</span>
+        <span class="city">{{ weatherInfo.city }} ({{ weatherInfo.locationCode }})</span>
+      </div>
+    </div>
+    
+    <div class="weather-details">
+      <div class="weather-detail-item">
+        <span class="detail-label">Condition</span>
+        <span class="detail-value">{{ weatherInfo.condition }}</span>
+      </div>
+      <div class="weather-detail-item">
+        <span class="detail-label">Humidity</span>
+        <span class="detail-value">{{ weatherInfo.humidity }}%</span>
+      </div>
+      <div class="weather-detail-item">
+        <span class="detail-label">Wind</span>
+        <span class="detail-value">{{ weatherInfo.windSpeedKmh }} km/h</span>
+      </div>
+    </div>
+  </div>
+</div>

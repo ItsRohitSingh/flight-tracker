@@ -1,0 +1,150 @@
+.flight-tracker-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.loading-state, .error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-color-muted);
+}
+
+.loading-state i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.flight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flight-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.flight-title h2 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.aircraft-info {
+  color: var(--text-color-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flight-route {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+}
+
+.route-point {
+  text-align: center;
+  flex: 1;
+}
+
+.route-point .code {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary-color);
+  text-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.route-point .city {
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
+
+.route-point .time {
+  font-size: 0.9rem;
+  color: var(--text-color-muted);
+  line-height: 1.5;
+}
+
+.route-progress {
+  flex: 2;
+  margin: 0 2rem;
+  position: relative;
+  text-align: center;
+}
+
+.route-icon {
+  position: absolute;
+  top: -15px;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  transform: translateX(-50%);
+  transition: left 1s ease-in-out;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.route-stats {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+}
+
+.flight-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-card {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.detail-icon {
+  font-size: 2.5rem;
+  color: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-content {
+  flex: 1;
+}
+
+.detail-content h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-color-muted);
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.5rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.weather-card {
+  padding: 0; /* Override internal padding to match grid */
+}
+
+@media (max-width: 768px) {
+  .flight-route {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .route-progress {
+    width: 100%;
+    margin: 1rem 0;
+  }
+}
